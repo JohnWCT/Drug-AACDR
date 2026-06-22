@@ -3,6 +3,7 @@ import time
 import pickle
 import torch
 import argparse
+import math
 import statistics
 import numpy as np
 from sklearn import metrics
@@ -50,10 +51,10 @@ cwd = '/'.join(cwd)
 with open(cwd + '/data/GDSC/GDSC_only_dataset.pkl', 'rb')as f:
     gdsc_dataset = pickle.load(f)
 
-with open(cwd + '/data/zy/CDR/data/TCGA/TCGA_unlabel_dataset.pkl', 'rb')as f2: 
+with open(cwd + '/data/TCGA/TCGA_unlabel_dataset.pkl', 'rb')as f2:
     tcga_unlabel_dataset = pickle.load(f2)
 
-with open(cwd + '/data/zy/CDR/data/TCGA/TCGA_dataset.pkl', 'rb')as f2:
+with open(cwd + '/data/TCGA/TCGA_dataset.pkl', 'rb')as f2:
     TCGA_dataset = pickle.load(f2)
     
 def save_record(record):
@@ -81,7 +82,10 @@ def save_record(record):
     for c in ['whole', 'seen', 'unseen']:
         for t in ['auc', 'acc', 'precision', 'recall', 'f1']:
             result[c][t]['mean'] = statistics.mean(total[c][t])
-            result[c][t]['std'] = math.sqrt(statistics.variance(total[c][t]))
+            if len(total[c][t]) > 1:
+                result[c][t]['std'] = math.sqrt(statistics.variance(total[c][t]))
+            else:
+                result[c][t]['std'] = 0.0
     with open(cwd + '/ckpt/log_'+str(seed)+'_'+str(id) + '_' + description +'.txt', 'w')as f:
         f.write(res)
     print(result)

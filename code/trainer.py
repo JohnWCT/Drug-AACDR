@@ -40,21 +40,20 @@ import matplotlib.pyplot as plt
 #         # Return the average loss
 #         return loss.sum() / mask.sum() if mask.sum() > 0 else torch.tensor(0.0, device=loss.device)
 
-# device = 'cuda:0'
-device = torch.device('cuda:2')
-mse_loss = torch.nn.MSELoss()
-
-def domain_loss_fn(pred):
-    return -torch.mean(torch.log(pred.sigmoid()))
+def resolve_device(device_name=None):
+    if device_name:
+        return torch.device(device_name)
+    return torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 class AADATrainer():
-    def __init__(self, seed, lr, batch_size, max_epoch, GDSC_drug_graph, TCGA_drug_graph, train_dataset, val_dataset, tcga_unlabel_dataset, TCGA_dataset):
+    def __init__(self, seed, lr, batch_size, max_epoch, GDSC_drug_graph, TCGA_drug_graph, train_dataset, val_dataset, tcga_unlabel_dataset, TCGA_dataset, device=None):
+        self.device = resolve_device(device)
         self.cancer_fe = FE()
         self.classifier = DNN()
         self.autoEncoder = AutoEncoder()
-        self.cancer_fe.to(device)
-        self.classifier.to(device)
-        self.autoEncoder.to(device)
+        self.cancer_fe.to(self.device)
+        self.classifier.to(self.device)
+        self.autoEncoder.to(self.device)
 
         self.save_cancer_fe = None
         self.save_classifier = None
@@ -118,8 +117,8 @@ class AADATrainer():
                 tmp = (tmp['feature'], tmp['adj'])
                 adjs.append(torch.tensor(tmp[1]).unsqueeze(0))
                 features.append(torch.tensor(tmp[0]).unsqueeze(0))
-            features = torch.cat(features, dim=0).float().to(device)
-            adjs = torch.cat(adjs, dim=0).float().to(device)
+            features = torch.cat(features, dim=0).float().to(self.device)
+            adjs = torch.cat(adjs, dim=0).float().to(self.device)
             return adjs, features
         else:
             seen_flag = False
@@ -131,8 +130,8 @@ class AADATrainer():
                 tmp = (tmp['feature'], tmp['adj'])
                 adjs.append(torch.tensor(tmp[1]).unsqueeze(0))
                 features.append(torch.tensor(tmp[0]).unsqueeze(0))
-            features = torch.cat(features, dim=0).float().to(device)
-            adjs = torch.cat(adjs, dim=0).float().to(device)
+            features = torch.cat(features, dim=0).float().to(self.device)
+            adjs = torch.cat(adjs, dim=0).float().to(self.device)
             return adjs, features, seen_flag
     def fit(self):
         print('train size:{0} val size:{1} test size:{2}'.format(len(self.train_dataset), len(self.val_dataset),len(self.TCGA_dataset)))
@@ -147,7 +146,7 @@ class AADATrainer():
         TCGADataLoader = DataLoader(self.TCGA_dataset, batch_size = self.test_batch_size, shuffle=False)
 
         seen_drug = set()
-        pos_weight = torch.tensor([1.0]).to(device)
+        pos_weight = torch.tensor([1.0]).to(self.device)
         print('pos weight:{0}'.format(pos_weight.item()))
         gdsc_predict_loss_fn = torch.nn.BCEWithLogitsLoss(pos_weight=pos_weight)
         tcga_predict_loss_fn = torch.nn.BCEWithLogitsLoss()
@@ -192,12 +191,12 @@ class AADATrainer():
                 graph_gdsc_id, gdsc_expr_data, label = g
                 if i == 0 and step == 0:
                     print(graph_gdsc_id[:15])
-                label = label.view(self.batch_size,1).float().to(device)
+                label = label.view(self.batch_size,1).float().to(self.device)
 
                 gdsc_adjs, gdsc_features = self.get_data(graph_gdsc_id, 'GDSC')
                 
-                gdsc_expr_data = gdsc_expr_data.to(device).float().view(self.batch_size, 702)
-                tcga_expr_data = tcga_expr_data.view(self.tcga_size,702).to(device).float()
+                gdsc_expr_data = gdsc_expr_data.to(self.device).float().view(self.batch_size, 702)
+                tcga_expr_data = tcga_expr_data.view(self.tcga_size,702).to(self.device).float()
 
                 # step 1
                 gdsc_expr = self.cancer_fe(gdsc_expr_data)
@@ -280,10 +279,10 @@ class AADATrainer():
                 for batch in valDataLoader:
                     step += 1
                     graph_id, expr_data, label = batch
-                    label = label.view(self.val_batch_size).float().to(device)
+                    label = label.view(self.val_batch_size).float().to(self.device)
                     adjs, features = self.get_data(graph_id, 'GDSC')
                     
-                    expr_data = expr_data.to(device).float().view(self.val_batch_size, 702)
+                    expr_data = expr_data.to(self.device).float().view(self.val_batch_size, 702)
 
                     expr = self.cancer_fe(expr_data)
                     pred = self.classifier(features, adjs, expr)
@@ -316,12 +315,12 @@ class AADATrainer():
                 for batch in TCGADataLoader:
                     step += 1
                     graph_id, expr_data, label = batch
-                    label = label.view(self.test_batch_size).float().to(device)
+                    label = label.view(self.test_batch_size).float().to(self.device)
                     adjs, features, seen_flag = self.get_data(graph_id, 'TCGA')
                     dim = features.shape[-1]
                     features = features.view(-1,100,dim)
 
-                    expr_data = expr_data.to(device).float().view(-1,702)
+                    expr_data = expr_data.to(self.device).float().view(-1,702)
 
                     expr = self.cancer_fe(expr_data)
                     pred = self.classifier(features, adjs, expr).view(self.test_batch_size)

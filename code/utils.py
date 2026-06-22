@@ -42,11 +42,23 @@ def read_drug_list(type=None):
                 TCGA.append(l[-1])
         return TCGA       
 
+def _drug_graph_dir(dataset_type):
+    base = Path(cwd) / 'data' / dataset_type
+    primary = base / 'drug_graph'
+    if primary.is_dir():
+        return primary
+    fallback = base / 'drug_graph3'
+    if fallback.is_dir():
+        return fallback
+    raise FileNotFoundError(
+        f'No drug graph directory found under {base} (expected drug_graph or drug_graph3)'
+    )
+
 def read_drug_graph(type, drug_list):
     result = {}
-    floader = cwd + '/data/'+type+'/drug_graph/'
+    floader = _drug_graph_dir(type)
     for id in drug_list:
-        path = floader + str(id) + '.npz'
+        path = floader / f'{id}.npz'
         result[str(id)] = np.load(path)
     return result
 
