@@ -45,3 +45,19 @@ def test_summary_schema():
     summary = compute_metrics_summary(per, pred, fold=0, seed=0)
     assert "macro_auroc" in summary.columns
     assert summary["eval_dataset"].iloc[0] == "primary"
+    for col in (
+        "overall_auroc",
+        "overall_auprc",
+        "overall_accuracy",
+        "overall_balanced_accuracy",
+        "overall_f1",
+        "overall_precision",
+        "overall_recall",
+        "macro_precision",
+        "macro_recall",
+        "weighted_precision",
+        "weighted_recall",
+    ):
+        assert col in summary.columns
+    assert not np.isnan(summary["overall_auroc"].iloc[0])
+    assert not np.isnan(summary["overall_auprc"].iloc[0])

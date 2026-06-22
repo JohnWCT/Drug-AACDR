@@ -191,6 +191,46 @@ def build_prediction_table_from_response(
     return pd.DataFrame(out)
 
 
+def _label_classification_metrics(y: np.ndarray, pred: np.ndarray) -> dict[str, float]:
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        return {
+            "accuracy": float(accuracy_score(y, pred)),
+            "balanced_accuracy": float(balanced_accuracy_score(y, pred)),
+            "f1": float(f1_score(y, pred, zero_division=0)),
+            "precision": float(precision_score(y, pred, zero_division=0)),
+            "recall": float(recall_score(y, pred, zero_division=0)),
+        }
+
+
+def compute_overall_metrics(pred_df: pd.DataFrame) -> dict[str, float]:
+    """Pool all sample-drug pairs and compute micro/overall classification metrics."""
+    nan_row = {
+        "overall_auroc": float("nan"),
+        "overall_auprc": float("nan"),
+        "overall_accuracy": float("nan"),
+        "overall_balanced_accuracy": float("nan"),
+        "overall_f1": float("nan"),
+        "overall_precision": float("nan"),
+        "overall_recall": float("nan"),
+    }
+    if pred_df.empty:
+        return nan_row
+    y = pred_df["ground_truth"].astype(int).to_numpy()
+    scores = pred_df["probability"].astype(float).to_numpy()
+    pred = pred_df["pred_label"].astype(int).to_numpy()
+    label_metrics = _label_classification_metrics(y, pred)
+    return {
+        "overall_auroc": _safe_auc(y, scores),
+        "overall_auprc": _safe_auprc(y, scores),
+        "overall_accuracy": label_metrics["accuracy"],
+        "overall_balanced_accuracy": label_metrics["balanced_accuracy"],
+        "overall_f1": label_metrics["f1"],
+        "overall_precision": label_metrics["precision"],
+        "overall_recall": label_metrics["recall"],
+    }
+
+
 def compute_metrics_per_drug(pred_df: pd.DataFrame, fold: int, seed: int) -> pd.DataFrame:
     rows = []
     for drug_id, g in pred_df.groupby("drug_id"):
@@ -241,9 +281,7 @@ def compute_metrics_summary(
         mask = ~np.isnan(v)
         return float(np.average(v[mask], weights=w[mask])) if mask.any() else float("nan")
 
-    y_all = pred_df["ground_truth"].astype(int).to_numpy() if len(pred_df) else np.array([])
-    p_all = pred_df["pred_label"].astype(int).to_numpy() if len(pred_df) else np.array([])
-    overall_acc = float(accuracy_score(y_all, p_all)) if len(y_all) else float("nan")
+    overall = compute_overall_metrics(pred_df) if len(pred_df) else compute_overall_metrics(pd.DataFrame())
 
     return pd.DataFrame(
         [
@@ -256,12 +294,16 @@ def compute_metrics_summary(
                 "macro_accuracy": macro("accuracy"),
                 "macro_balanced_accuracy": macro("balanced_accuracy"),
                 "macro_f1": macro("f1"),
+                "macro_precision": macro("precision"),
+                "macro_recall": macro("recall"),
                 "weighted_auroc": weighted("auroc"),
                 "weighted_auprc": weighted("auprc"),
                 "weighted_accuracy": weighted("accuracy"),
                 "weighted_balanced_accuracy": weighted("balanced_accuracy"),
                 "weighted_f1": weighted("f1"),
-                "overall_accuracy": overall_acc,
+                "weighted_precision": weighted("precision"),
+                "weighted_recall": weighted("recall"),
+                **overall,
                 "fold": fold,
                 "seed": seed,
             }

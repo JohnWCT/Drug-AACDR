@@ -237,7 +237,7 @@ output_dir/
 ### 8.3 Metrics
 
 - **Per-drug**：`auroc`, `auprc`, `accuracy`, `balanced_accuracy`, `f1`, `precision`, `recall`（單一 class 時 AUROC/AUPRC = NaN，保留該列）
-- **Summary**：`macro_*`、`weighted_*`、`overall_accuracy`
+- **Summary**：`macro_*`、`weighted_*`、`overall_*`（含 AUROC/AUPRC/accuracy/F1/precision/recall，overall 為所有 sample-drug pairs 合併計算）
 
 ---
 
