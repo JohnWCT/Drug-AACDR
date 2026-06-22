@@ -1,0 +1,3 @@
+# Additional dependencies for aacdr_pipeline (drug graph from SMILES)
+deepchem>=2.7.0
+pytest>=8.0

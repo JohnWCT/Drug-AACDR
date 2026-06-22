@@ -1,0 +1,11 @@
+Patient_id,drug_name,Label,cancers
+TCGA-XX-0001,docetaxel,1,TEST
+TCGA-XX-0002,docetaxel,0,TEST
+TCGA-XX-0003,docetaxel,1,TEST
+TCGA-XX-0004,docetaxel,1,TEST
+TCGA-XX-0005,docetaxel,0,TEST
+TCGA-XX-0006,docetaxel,1,TEST
+TCGA-XX-0007,docetaxel,1,TEST
+TCGA-XX-0008,docetaxel,1,TEST
+TCGA-XX-0009,docetaxel,0,TEST
+TCGA-XX-0010,docetaxel,1,TEST
