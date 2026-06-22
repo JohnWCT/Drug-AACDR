@@ -66,8 +66,7 @@ def test_pipeline_smoke(fixture_dir, tmp_path):
         assert (fdir / "target_latent_representation.pkl").is_file()
         assert (fdir / "latent_distribution_metrics.csv").is_file()
         assert (fdir / "kmeans_cancer_type_metrics.csv").is_file()
-        assert (fdir / "tsne_domain_mixing.png").is_file()
-        assert (fdir / "tsne_cancer_type.png").is_file()
+        assert (fdir / "tsne_latent_dual.png").is_file()
 
     manifest = (out / "run_manifest.json").read_text(encoding="utf-8")
     assert "tcga_labels_in_training" in manifest

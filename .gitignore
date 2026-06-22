@@ -10,6 +10,10 @@ supplymentmaterials/
 ckpt/
 *.log
 
+# AACDR pipeline run outputs (do not commit)
+outputs_aacdr*/
+outputs_aacdr_*_run.log
+
 # -----------------------------------------------------------------------------
 # Python
 # -----------------------------------------------------------------------------

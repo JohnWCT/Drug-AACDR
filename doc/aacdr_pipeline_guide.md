@@ -226,7 +226,7 @@ output_dir/
 | TCGA target_only | `target_only_prediction_results.csv`、`target_only_metrics_per_drug.csv`、`target_only_metrics_summary.csv` |
 | TCGA auxiliary | `target_auxiliary_prediction_results.csv`、`target_auxiliary_metrics_per_drug.csv`、`target_auxiliary_metrics_summary.csv` |
 | Latent | `source_latent_representation.pkl`、`target_latent_representation.pkl` |
-| 視覺化 | `tsne_domain_mixing.png`、`tsne_cancer_type.png` |
+| 視覺化 | `tsne_latent_dual.png`（DAPL 風格 1×2 雙面板：Domain + Cancer Type，dpi=250，t-SNE random_state=42） |
 | 分佈 / 聚類 | `latent_distribution_metrics.csv`、`kmeans_cancer_type_metrics.csv` |
 | Checkpoint | `best_model_fe.pt`、`best_model_dnn.pt`、`best_model_ae.pt` |
 
